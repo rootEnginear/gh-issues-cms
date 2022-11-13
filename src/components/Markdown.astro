@@ -1,0 +1,137 @@
+---
+import { marked } from "marked";
+import { getHighlighter } from "shiki";
+
+interface Props {
+  markdown: string;
+}
+
+const removeRepeatPreCode = (md: string) => {
+  return md
+    .replace(/<pre><cod.+?><pre class="shiki"/g, '<pre class="shiki"')
+    .replace(/<\/code><\/pre>\n<\/code><\/pre>/g, "</code></pre>");
+};
+
+const makeLinkExternal = (md: string) => {
+  return md.replace(
+    /<a href="(.+?)"/g,
+    '<a href="$1" target="_blank" rel="nofollow noopener noreferrer" title="$1"'
+  );
+};
+
+const formatMd = (md: string) => {
+  return makeLinkExternal(removeRepeatPreCode(md));
+};
+
+const { markdown } = Astro.props;
+
+const highlighter = await getHighlighter({
+  theme: "github-dark-dimmed",
+});
+
+marked.setOptions({
+  highlight: (code: string, lang: string) => highlighter.codeToHtml(code, { lang }),
+});
+
+const html = formatMd(marked.parse(markdown));
+---
+
+<div class="content">
+  <Fragment set:html={html} />
+</div>
+
+<style lang="scss" is:global>
+  .content {
+    hr {
+      border: none;
+    }
+
+    :is(h1, h2, h3, hr) {
+      margin: 16px 0;
+      border-bottom: 2px solid;
+    }
+
+    :is(p, blockquote, pre, ol, ul, table, img) {
+      margin: 8px 0;
+    }
+
+    blockquote {
+      border-left: 2px solid;
+      padding-left: 8px;
+      border-radius: 2px;
+    }
+
+    code {
+      background: #22272e;
+      color: #fff;
+      padding: 2px 4px;
+      border-radius: 4px;
+
+      font-size: 0.9em;
+      font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console",
+        "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
+        "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier,
+        "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", monospace;
+    }
+
+    pre {
+      padding: 8px;
+      border-radius: 4px;
+
+      overflow-x: auto;
+    }
+
+    pre > code {
+      padding: 0;
+      border-radius: 0;
+
+      counter-reset: code-line;
+      counter-increment: code-line 0;
+    }
+
+    code .line::before {
+      content: counter(code-line);
+      counter-increment: code-line;
+      width: 1.5rem;
+      margin-right: 1rem;
+      display: inline-block;
+      text-align: right;
+      color: #636e7b;
+    }
+
+    :is(ul, ol) {
+      margin-left: 2ch;
+    }
+
+    li > :is(ul, ol) {
+      margin: 0 0 0 2ch;
+    }
+
+    table {
+      border-collapse: collapse;
+
+      td,
+      th {
+        padding: 8px;
+        border: 1px solid;
+      }
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    del {
+      opacity: 0.5;
+      text-decoration: line-through #ff4136 double;
+    }
+
+    a {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+      hyphens: none;
+    }
+  }
+</style>

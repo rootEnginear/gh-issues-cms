@@ -1,6 +1,10 @@
 import { Octokit } from "@octokit/core";
 import type { GraphQlQueryResponseData } from "@octokit/graphql";
 
+const octokit = new Octokit({
+  auth: import.meta.env.TOKEN,
+});
+
 export const splitSlugFromTitle = (full_title: string) => {
   const [title, slug] = full_title
     .replace(/(.+)\[(.+?)\]$/g, "$1\uE000$2")
@@ -14,10 +18,6 @@ export const splitSlugFromTitle = (full_title: string) => {
 };
 
 export const fetchIssues = async () => {
-  const octokit = new Octokit({
-    auth: import.meta.env.TOKEN,
-  });
-
   const response = await octokit.graphql<GraphQlQueryResponseData>(
     `{
   repository(name: "gh-issues-cms", owner: "rootEnginear") {
@@ -52,4 +52,33 @@ export const fetchIssues = async () => {
       issueNumber: number;
     };
   }[];
+};
+
+export const fetchIssue = async (number: number) => {
+  const response = await octokit.graphql<GraphQlQueryResponseData>(
+    `query Issue($number: Int!) {
+  repository(name: "gh-issues-cms", owner: "rootEnginear") {
+    issue(number: $number) {
+      body
+      author {
+        avatarUrl
+        login
+        url
+      }
+      lastEditedAt
+      createdAt
+      labels(first: 100) {
+        nodes {
+          name
+        }
+      }
+    }
+  }
+}`,
+    {
+      number,
+    }
+  );
+
+  return response.repository.issue;
 };
