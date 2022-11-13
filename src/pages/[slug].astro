@@ -1,0 +1,22 @@
+---
+import { fetchIssues } from "../utils/fetch";
+import Layout from "./__layout.astro";
+
+interface Props {
+  title: string;
+  issueNumber: number;
+}
+
+export function getStaticPaths() {
+  return fetchIssues();
+}
+
+const { title, issueNumber } = Astro.props;
+---
+
+<Layout title={title}>
+  <h1>
+    <mark>#{issueNumber}</mark>
+    {title}
+  </h1>
+</Layout>
