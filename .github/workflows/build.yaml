@@ -17,8 +17,8 @@ jobs:
     steps:
       - name: Log event data
         run: echo '${{ toJSON(github.event) }}'
-  build_on_general_events:
-    if: ${{ contains(fromJson('["issue_comment", "workflow_dispatch"]'), github.event_name) }}
+  force_build:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +37,7 @@ jobs:
           FOLDER: dist
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build_on_modifying_issues:
-    if: ${{ github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'state:published') }}
+    if: ${{ contains(fromJson('["issue_comment", "issues"]'), github.event_name) && contains(github.event.issue.labels.*.name, 'state:published') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
