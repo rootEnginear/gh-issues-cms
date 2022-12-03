@@ -7,15 +7,46 @@ const issuesList = await fetchIssues();
 
 <Layout>
   <h1>Articles</h1>
-  <ul>
+  <section class="grid">
     {
       issuesList.map((e) => (
-        <li>
-          <a href={e.params.slug}>
-            <mark>#{e.props.issueNumber}</mark> {e.props.title}
-          </a>
-        </li>
+        <aside>
+          <img
+            src={`https://picsum.photos/id/${e.issueNumber}/300/200`}
+            alt=""
+            width="300"
+            height="200"
+            loading="lazy"
+            decoding="async"
+          />
+          <h2>
+            <a href={e.slug}>{e.title}</a>
+          </h2>
+          <p>
+            {e.bodyText.slice(0, 100)}...
+            <a href={e.slug}>Read more</a>
+          </p>
+          <hr style="margin:1rem 0" />
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span>
+              {e.commentCount > 0
+                ? `${e.commentCount} comment${e.commentCount > 1 ? "s" : ""}`
+                : ""}
+            </span>
+            <span>
+              {e.reactions.totalCount}
+              {e.reactions.THUMBS_UP > 0 ? "👍" : ""}
+              {e.reactions.THUMBS_DOWN > 0 ? "👎" : ""}
+              {e.reactions.LAUGH > 0 ? "😂" : ""}
+              {e.reactions.HOORAY > 0 ? "🎉" : ""}
+              {e.reactions.CONFUSED > 0 ? "🤔" : ""}
+              {e.reactions.HEART > 0 ? "❤" : ""}
+              {e.reactions.ROCKET > 0 ? "🚀" : ""}
+              {e.reactions.EYES > 0 ? "👀" : ""}
+            </span>
+          </div>
+        </aside>
       ))
     }
-  </ul>
+  </section>
 </Layout>

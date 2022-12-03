@@ -3,6 +3,8 @@ interface Props {
   title?: string;
 }
 
+import config from "../../astro.config.mjs";
+
 const { title } = Astro.props;
 const formatted_title = title ? title + " — GitHub Issues CMS" : "GitHub Issues CMS";
 ---
@@ -11,57 +13,24 @@ const formatted_title = title ? title + " — GitHub Issues CMS" : "GitHub Issue
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>{formatted_title}</title>
+
     <slot name="head" />
   </head>
   <body>
     <main>
+      <nav style="margin-bottom:0">
+        GitHub Issues CMS
+        <ul>
+          <li>
+            <a href={`${config.base}/`}>Home</a>
+          </li>
+        </ul>
+      </nav>
       <slot />
     </main>
-    <style is:global>
-      :where(*, *::before, *::after) {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      :where(html) {
-        color-scheme: dark light;
-        text-size-adjust: none;
-        -webkit-text-size-adjust: none;
-        -moz-text-size-adjust: none;
-      }
-
-      :where(.visually-hidden:not(:focus, :active, :focus-within, .not-visually-hidden)) {
-        clip-path: inset(50%) !important;
-        height: 1px !important;
-        width: 1px !important;
-        overflow: hidden !important;
-        position: absolute !important;
-        white-space: nowrap !important;
-        border: 0 !important;
-      }
-
-      body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-          "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-          "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
-        line-height: 1.5;
-        letter-spacing: 0.1px;
-
-        padding: 32px 16px;
-      }
-
-      main {
-        max-width: 800px;
-        margin: auto;
-      }
-
-      mark {
-        background: #ffdc00;
-      }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css" />
   </body>
 </html>

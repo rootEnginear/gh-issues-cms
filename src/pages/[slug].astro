@@ -1,5 +1,5 @@
 ---
-import { fetchIssue, fetchIssues } from "../utils/fetch";
+import { fetchIssue, fetchIssuesSlugs } from "../utils/fetch";
 
 import Layout from "./__layout.astro";
 import Markdown from "../components/Markdown.astro";
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function getStaticPaths() {
-  return fetchIssues();
+  return fetchIssuesSlugs();
 }
 
 const { title, issueNumber } = Astro.props;
@@ -20,8 +20,66 @@ const data = await fetchIssue(issueNumber);
 
 <Layout title={title}>
   <h1>
-    <mark>#{issueNumber}</mark>
     {title}
   </h1>
+
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px">
+      <img
+        src={data.author.avatarUrl}
+        alt=""
+        width="32"
+        height="32"
+        style="border-radius:64px"
+      />
+      <div>
+        <a href={data.author.url}>{data.author.login}</a>
+        <small style="display:block"><a href={data.url}>View in GitHub</a></small>
+      </div>
+    </div>
+    <div style="text-align:end">
+      {new Date(data.createdAt).toLocaleString()}
+
+      {
+        data.createdAt !== data.updatedAt && (
+          <small style="display:block">
+            (Latest edit: {new Date(data.updatedAt).toLocaleString()})
+          </small>
+        )
+      }
+    </div>
+  </div>
   <Markdown markdown={data.body} />
+  <hr />
+  <h2>
+    Comments {data.comments.nodes.length > 0 ? `(${data.comments.nodes.length})` : ""}
+  </h2>
+  <div>
+    {
+      data.comments.nodes.length > 0 ? (
+        data.comments.nodes.map((c: any) => (
+          <div style="border:1px solid var(--color-bg-secondary);border-radius:var(--border-radius);box-shadow:var(--box-shadow) var(--color-shadow);padding:1.25rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <img
+                src={c.author.avatarUrl}
+                alt=""
+                width="32"
+                height="32"
+                style="border-radius:64px"
+              />
+              <div>
+                <a href={c.author.url}>{c.author.login}</a>
+                <small style="display:block">
+                  <a href={c.url}>View this comment in GitHub</a>
+                </small>
+              </div>
+            </div>
+            <Markdown markdown={c.body} />
+          </div>
+        ))
+      ) : (
+        <span>No comments yet!</span>
+      )
+    }
+  </div>
 </Layout>

@@ -1,11 +1,12 @@
 import { Octokit } from "@octokit/core";
 import type { GraphQlQueryResponseData } from "@octokit/graphql";
+import { REPO_NAME, REPO_OWNER, ISS_LABEL } from "../config";
 
 const octokit = new Octokit({
   auth: import.meta.env.TOKEN,
 });
 
-export const splitSlugFromTitle = (full_title: string) => {
+export const getSlugFromTitle = (full_title: string) => {
   const [title, slug] = full_title
     .replace(/(.+)\[(.+?)\]$/g, "$1\uE000$2")
     .split("\uE000")
@@ -17,11 +18,23 @@ export const splitSlugFromTitle = (full_title: string) => {
   };
 };
 
-export const fetchIssues = async () => {
+export const formatReaction = (
+  reactionQueryArray: {
+    content: string;
+    users: {
+      totalCount: number;
+    };
+  }[]
+) =>
+  Object.fromEntries(
+    reactionQueryArray.map((reaction) => [reaction.content, reaction.users.totalCount])
+  );
+
+export const fetchIssuesSlugs = async () => {
   const response = await octokit.graphql<GraphQlQueryResponseData>(
     `{
-  repository(name: "gh-issues-cms", owner: "rootEnginear") {
-    issues(first: 10, labels: "state:published") {
+  repository(name: "${REPO_NAME}", owner: "${REPO_OWNER}") {
+    issues(first: 10, labels: "${ISS_LABEL}") {
       nodes {
         title
         number
@@ -32,7 +45,7 @@ export const fetchIssues = async () => {
   );
 
   return response.repository.issues.nodes.map((e: any) => {
-    const { slug, title } = splitSlugFromTitle(e.title);
+    const { slug, title } = getSlugFromTitle(e.title);
 
     return {
       params: {
@@ -54,22 +67,97 @@ export const fetchIssues = async () => {
   }[];
 };
 
+export const fetchIssues = async () => {
+  const response = await octokit.graphql<GraphQlQueryResponseData>(
+    `{
+  repository(name: "${REPO_NAME}", owner: "${REPO_OWNER}") {
+    issues(first: 10, labels: "${ISS_LABEL}") {
+      nodes {
+        title
+        number
+        bodyText
+        comments {
+          totalCount
+        }
+        updatedAt
+        createdAt
+        reactionGroups {
+          content
+          users {
+            totalCount
+          }
+        }
+        reactions {
+          totalCount
+        }
+      }
+    }
+  }
+}`
+  );
+
+  return response.repository.issues.nodes.map((e: any) => {
+    const { slug, title } = getSlugFromTitle(e.title);
+    const formattedReaction = {
+      ...formatReaction(e.reactionGroups),
+      totalCount: e.reactions.totalCount,
+    };
+
+    return {
+      slug,
+      title,
+      issueNumber: e.number,
+      bodyText: e.bodyText,
+      commentCount: +e.comments.totalCount,
+      reactions: formattedReaction,
+      updatedAt: e.updatedAt,
+      createdAt: e.createdAt,
+    };
+  }) as {
+    slug: string;
+    title: string;
+    issueNumber: number;
+    bodyText: string;
+    commentCount: number;
+    updatedAt: string;
+    createdAt: string;
+    reactions: {
+      THUMBS_UP: number;
+      THUMBS_DOWN: number;
+      LAUGH: number;
+      HOORAY: number;
+      CONFUSED: number;
+      HEART: number;
+      ROCKET: number;
+      EYES: number;
+      totalCount: number;
+    };
+  }[];
+};
+
 export const fetchIssue = async (number: number) => {
   const response = await octokit.graphql<GraphQlQueryResponseData>(
     `query Issue($number: Int!) {
-  repository(name: "gh-issues-cms", owner: "rootEnginear") {
+  repository(name: "${REPO_NAME}", owner: "${REPO_OWNER}") {
     issue(number: $number) {
-      body
       author {
         avatarUrl
         login
         url
       }
-      lastEditedAt
       createdAt
-      labels(first: 100) {
+      updatedAt
+      url
+      body
+      comments(last: 10) {
         nodes {
-          name
+          body
+          author {
+            avatarUrl
+            login
+            url
+          }
+          url
         }
       }
     }
