@@ -3,8 +3,6 @@ interface Props {
   title?: string;
 }
 
-import config from "../../astro.config.mjs";
-
 const { title } = Astro.props;
 const formatted_title = title ? title + " — GitHub Issues CMS" : "GitHub Issues CMS";
 ---
@@ -25,7 +23,7 @@ const formatted_title = title ? title + " — GitHub Issues CMS" : "GitHub Issue
         GitHub Issues CMS
         <ul>
           <li>
-            <a href={`${config.base}/`}>Home</a>
+            <a href={import.meta.env.BASE_URL}>Home</a>
           </li>
         </ul>
       </nav>
